@@ -1,0 +1,109 @@
+﻿@using MstatReader.Lib;
+@using MstatReader.Lib.Models;
+
+@page "/"
+
+<h1>MstatReader</h1>
+
+<InputFile OnChange="@LoadFiles" />
+
+<button @onclick="@Process" disabled="@(files.Count == 0)">Process</button>
+
+<br />
+<br />
+
+<h3>Filters</h3>
+@*
+<table id="filterTable">
+    <tr>
+        <td>
+            <p>Hide types from framework/system - </p>
+        </td>
+        <td>
+           System<input type="checkbox" />
+           Microsoft<input type="checkbox" />
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>Search full name</p>
+        </td>
+        <td>
+            <input @bind="SearchTerm">
+            <button @onclick="OnSearchClicked">Search</button>
+        </td>
+    </tr>
+</table*@
+
+<div id="grid">
+    <QuickGrid Items="@types" ResizableColumns="true">
+        <PropertyColumn Property="@(x => x.TypeReference!.FullName)" Sortable="true"/>
+        <PropertyColumn Property="@(x => x.Size!.SelfSize)" Sortable="true" />
+        <PropertyColumn Property="@(x => x.Size!.ContributionToOverallSize)" Sortable="true" Format="F2" />
+    </QuickGrid>
+</div>
+
+@code {
+    private List<IBrowserFile> files = new();
+    private IQueryable<TypeInformation>? types;
+
+    public string SearchTerm { get; set; } = string.Empty;
+
+    private void LoadFiles(InputFileChangeEventArgs args)
+    {
+        if (args.FileCount != 0)
+        {
+            files.Add(args.File);
+        }
+    }
+
+    public async Task Process()
+    {
+        if (files.Count > 0)
+        {
+            var stream = files[0].OpenReadStream();
+
+            MemoryStream ms = new();
+            await stream.CopyToAsync(ms);
+
+            Reader reader = new(ms);
+            types = reader.GetAllTypes().AsQueryable();
+        }
+    }
+
+    private void OnSearchClicked()
+    {
+        types = types.Where(x => x.TypeReference.FullName.Contains(SearchTerm));
+    }
+}
+
+
+<style>
+
+    #grid table {
+        width: 100%; /* Fill the entire available space */
+        table-layout: fixed; /* Keep the columns at their specified widths */
+        border-collapse: collapse;
+        font-family: Arial, sans-serif;
+    }
+
+    /* Style the table cells */
+    #grid td, #grid th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        overflow: auto;
+    }
+
+    /* Style the table headings */
+    #grid th {
+        background-color: #eee;
+        color: #000;
+        font-weight: bold;
+        text-align: left;
+    }
+
+    #grid button {
+        border: 0px;
+    }
+</style>
+
