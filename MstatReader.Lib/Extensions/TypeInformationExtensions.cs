@@ -1,9 +1,5 @@
-﻿using MstatReader.Lib.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Mono.Cecil;
+using MstatReader.Lib.Models;
 
 namespace MstatReader.Lib.Extensions;
 
@@ -23,5 +19,34 @@ public static class TypeInformationExtensions
         && !x.MethodReference.DeclaringType.Namespace.StartsWith("System")
         && !x.MethodReference.DeclaringType.Namespace.StartsWith("Microsoft")
         && x.MethodReference.DeclaringType.FullName != "<Module>");
+    }
+
+    public static IEnumerable<IGrouping<string, TypeInformation>> GroupByNamespace(this IEnumerable<TypeInformation> types)
+    {
+        return types.GroupBy(x => FindNamespace(x.TypeReference!));
+    }
+
+    public static IEnumerable<IGrouping<string, MethodInformation>> GroupByNamespace(this IEnumerable<MethodInformation> types)
+    {
+        return types.GroupBy(x => FindNamespace(x.MethodReference.DeclaringType!));
+    }
+
+    private static string FindNamespace(TypeReference type)
+    {
+        var current = type;
+        while (true)
+        {
+            if (!string.IsNullOrEmpty(current.Namespace))
+            {
+                return current.Namespace;
+            }
+
+            if (current.DeclaringType == null)
+            {
+                return current.Name;
+            }
+
+            current = current.DeclaringType;
+        }
     }
 }

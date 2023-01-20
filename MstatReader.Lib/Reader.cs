@@ -7,8 +7,8 @@ namespace MstatReader.Lib;
 public class Reader
 {
     private readonly string? _filePath;
-    private readonly AssemblyDefinition _assemblyDefination;
-    private TypeDefinition _assemblyTypeDefination;
+    private readonly AssemblyDefinition _assemblyDefinition;
+    private TypeDefinition _assemblyTypeDefinition;
     private MethodDefinition _types;
     private MethodDefinition _methods;
 
@@ -21,7 +21,7 @@ public class Reader
         File.Exists(mstatFilePath);
 
         _filePath = mstatFilePath;
-        _assemblyDefination = AssemblyDefinition.ReadAssembly(_filePath);
+        _assemblyDefinition = AssemblyDefinition.ReadAssembly(_filePath);
 
         CommonProcessing();
     }
@@ -31,17 +31,17 @@ public class Reader
         ArgumentNullException.ThrowIfNull(fileStream);
 
         fileStream.Position = 0;
-        _assemblyDefination = AssemblyDefinition.ReadAssembly(fileStream);
+        _assemblyDefinition = AssemblyDefinition.ReadAssembly(fileStream);
 
         CommonProcessing();
     }
 
     private void CommonProcessing()
     {
-        _assemblyTypeDefination = (TypeDefinition)_assemblyDefination.MainModule.LookupToken(0x02000001);
+        _assemblyTypeDefinition = (TypeDefinition)_assemblyDefinition.MainModule.LookupToken(0x02000001);
 
-        _types = _assemblyTypeDefination.Methods.First(x => x.Name == "Types");
-        _methods = _assemblyTypeDefination.Methods.First(x => x.Name == "Methods");
+        _types = _assemblyTypeDefinition.Methods.First(x => x.Name == "Types");
+        _methods = _assemblyTypeDefinition.Methods.First(x => x.Name == "Methods");
 
         _typeBodySize = _types.Body.CodeSize;
         _methodBodySize = _methods.Body.CodeSize;
